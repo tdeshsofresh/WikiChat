@@ -8,9 +8,13 @@ tqdm
 pyyaml
 spacy
 numpy
+pandas
+pyarrow
 huggingface-hub
 qdrant-client
 transformers
 sentence-transformers
 pymongo>=4.0,<5.0
 async-lru
+docker
+beautifulsoup4
