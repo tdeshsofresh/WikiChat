@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: wikichat
+    env: python
+    plan: free
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt || pip install pixi invoke chainlit redis
+    startCommand: |
+      python backend_server.py --port $PORT
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: COSMOS_CONNECTION_STRING
+        sync: false
