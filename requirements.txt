@@ -1,0 +1,14 @@
+chainlit
+invoke
+redis
+loguru
+requests
+tqdm
+pyyaml
+spacy
+numpy
+huggingface-hub
+qdrant-client
+transformers
+sentence-transformers
+pixi
