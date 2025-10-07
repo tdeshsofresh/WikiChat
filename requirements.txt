@@ -13,3 +13,4 @@ qdrant-client
 transformers
 sentence-transformers
 pymongo>=4.0,<5.0
+async-lru
