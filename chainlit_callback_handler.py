@@ -21,18 +21,8 @@ step_name_mapping = {
 
 
 class ChainlitCallbackHandler(LangchainCallbackHandler):
-    def __init__(
-        self,
-        dialogue_state: DialogueState,
-    ):
-        """
-        step_name_mapping: Steps without a mapping are excluded from the front-end
-        """
-
-        super().__init__(
-            to_ignore=None,
-            to_keep=None,
-        )
+    def __init__(self, dialogue_state: DialogueState):
+        super().__init__(to_ignore=None, to_keep=None)
         self.dialogue_state = dialogue_state
 
     def _should_ignore_run(self, run: Run) -> tuple[bool, Optional[str]]:
@@ -43,8 +33,8 @@ class ChainlitCallbackHandler(LangchainCallbackHandler):
             return True, None
         return super()._should_ignore_run(run)
 
-    def _start_trace(self, run: Run) -> None:
-        super()._start_trace(run)
+    async def _start_trace(self, run: Run) -> None:
+        await super()._start_trace(run)
         context_var.set(self.context)
 
         ignore, parent_id = self._should_ignore_run(run)
@@ -89,9 +79,9 @@ class ChainlitCallbackHandler(LangchainCallbackHandler):
 
         self.steps[str(run.id)] = step
 
-        self._run_sync(step.send())
+        await step.send()
 
-    def _on_run_update(self, run: Run) -> None:
+    async def _on_run_update(self, run: Run) -> None:
         """Process a run upon update."""
         context_var.set(self.context)
 
@@ -135,14 +125,12 @@ class ChainlitCallbackHandler(LangchainCallbackHandler):
             elif run.name == "filter_information_stage":
                 step_output = ""
                 for ref in self.dialogue_state.current_turn.filtered_search_results:
-                    summary = "\n".join(
-                        [f"- {s}" for s in ref.summary]
-                    )  # add bullet points
+                    summary = "\n".join([f"- {s}" for s in ref.summary])
                     step_output += f"#### [{ref.full_title}]({ref.url})\n\n**Summary:**\n{summary}\n\n**Full text:**\n\n{ref.content}\n\n"
             elif run.name == "draft_stage":
                 step_output = self.dialogue_state.current_turn.draft_stage_output
 
             if step_output:
                 current_step.output = step_output
-                self._run_sync(current_step.update())
+                await current_step.update()
             current_step.end = utc_now()
