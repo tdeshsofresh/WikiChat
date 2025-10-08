@@ -7,7 +7,43 @@ services:
       python -m pip install --upgrade pip
       python -m pip install -r requirements.txt
     startCommand: |
-      bash -lc 'echo "Starting Chainlit on PORT=$PORT"; chainlit run backend_server.py --host 0.0.0.0 --port $PORT'
+      bash -lc '
+        set -euxo pipefail
+
+        echo "===== Startup diagnostics ====="
+        echo "Working directory: $(pwd)"
+        echo "Python executable: $(command -v python)"
+        python --version
+        python -m pip show chainlit | grep -E "^Version"
+        python -m pip show chainlite | grep -E "^Version"
+        echo "PORT=${PORT}"
+        echo "List top-level files:"
+        ls -al
+
+        echo "Environment snapshot (safe keys):"
+        python - <<'"'"'PY'"'"'
+import os
+safe_keys = ["PORT", "CHAINLITE_CONFIG"]
+for k in safe_keys:
+    print(f"{k}={os.environ.get(k)}")
+PY
+
+        echo "Top 20 installed packages:"
+        python - <<'"'"'PY'"'"'
+import pkgutil
+for i, mod in enumerate(sorted(pkgutil.iter_modules()), 1):
+    print(mod.name)
+    if i == 20:
+        break
+PY
+
+        echo "===== Launching Chainlit ====="
+        chainlit run backend_server.py --host 0.0.0.0 --port "${PORT}" --headless --debug
+        status=$?
+        echo "Chainlit exited with status $status"
+        sleep 5
+        exit $status
+      '
     envVars:
       - key: OPENAI_API_KEY
         sync: false
